@@ -13,14 +13,17 @@ class TMSolver_LikelihoodMethod(models.TMSolver):
         ):
         """based on ..."""
         likelihood_opt = Optimizator(net_model)
-        opt = torch.optim.SGD(likelihood_opt.parameters(), lr=3e-1)
+        opt = torch.optim.Adam(likelihood_opt.parameters(), lr=15e-2)
 
         history = []
         for _ in range(max_grad_dec):
             opt.zero_grad()
             out = likelihood_opt()
             out.backward()
+            for i in range(net_model.graph.size(dim=0)):
+                likelihood_opt.lambdas.grad[i * net_model.graph.size(dim=0) + i] = 0
             opt.step()
+            print(out.detach())
             history.append(out.detach())
             if show_plt:
                 plt.plot(history)
@@ -33,13 +36,18 @@ class Optimizator(torch.nn.Module):
     def __init__(self, net_model:models.NetworkModel):
         super().__init__()
         self.A = net_model.A
+        self.A = net_model.A + 0.001 * torch.eye(self.A.size(dim=0))
+        print(self.A)
         self.net_model = net_model
-        self.lambdas = torch.nn.Parameter(torch.ones(net_model.graph.size(dim=0)**2), requires_grad=True)
+        params_pattern = torch.ones(net_model.graph.size(dim=0)**2)
+        for i in range(net_model.graph.size(dim=0)):
+            params_pattern[i * net_model.graph.size(dim=0) + i] = 0.0001
+        self.lambdas = torch.nn.Parameter(params_pattern, requires_grad=True)
         self.phi = torch.nn.Parameter(torch.tensor(1,dtype=torch.float64), requires_grad=True)
 
     def forward(self):
         self.sigma = self.phi * torch.pow(torch.diag(self.lambdas), 2)
-        likelihood = torch.log(torch.linalg.norm(self.A@self.sigma@self.A.T))
+        likelihood = - len(self.net_model.Y) / 2.0 * torch.log(torch.det(self.A@self.sigma@self.A.T))
         for y in self.net_model.Y:
             likelihood -= 0.5 * (y - self.A @ self.lambdas).T @ torch.inverse(
                 self.A@self.sigma@self.A.T) @ (y-self.A@self.lambdas)
