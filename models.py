@@ -78,12 +78,3 @@ class NetworkModel:
     def __pair_to_OD_number(self, i:int, j:int) -> int:
         return j + i*self.graph.size(dim=1)
 
-
-from abc import ABC, abstractmethod
-
-class TMSolver(ABC):
-    """ this class defines interface for TM solvers"""
-    @abstractmethod
-    def get_optimal_solution(self, net_model:NetworkModel):
-        pass
-

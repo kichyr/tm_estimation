@@ -2,21 +2,28 @@ import models
 import torch
 from matplotlib import pyplot as plt
 from IPython.display import clear_output
+import solvers.solver
 
 
-class TMSolver_LikelihoodMethod(models.TMSolver):
+class TMSolver_LikelihoodMethod(solvers.solver.TMSolver):
+    def __init__(
+        self,
+        max_grad_dec:int = 200,
+        show_plt:bool = False
+    ):
+        self.max_grad_dec = max_grad_dec
+        self.show_plt = show_plt
+
     def get_optimal_solution(
         self,
         net_model:models.NetworkModel,
-        max_grad_dec:int = 200,
-        show_plt:bool = False,
-        ):
+    ):
         """based on ..."""
         likelihood_opt = Optimizator(net_model)
         opt = torch.optim.Adam(likelihood_opt.parameters(), lr=15e-2)
 
         history = []
-        for _ in range(max_grad_dec):
+        for _ in range(self.max_grad_dec):
             opt.zero_grad()
             out = likelihood_opt()
             out.backward()
@@ -25,7 +32,7 @@ class TMSolver_LikelihoodMethod(models.TMSolver):
             opt.step()
             print(out.detach())
             history.append(out.detach())
-            if show_plt:
+            if self.show_plt:
                 plt.plot(history)
                 plt.show()
                 clear_output(True)
