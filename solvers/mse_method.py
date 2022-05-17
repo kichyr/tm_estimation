@@ -9,10 +9,12 @@ class TMSolver_MSEMethod(solvers.solver.TMSolver):
     def __init__(
         self,
         max_grad_dec:int = 200,
-        show_plt:bool = False
+        show_plt:bool = False,
+        lr:float = 15e-1
     ):
         self.max_grad_dec = max_grad_dec
         self.show_plt = show_plt
+        self.lr = lr
 
     def get_optimal_solution(
         self,
@@ -20,23 +22,25 @@ class TMSolver_MSEMethod(solvers.solver.TMSolver):
         ):
         """based on ..."""
         likelihood_opt = Optimizator(net_model)
-        opt = torch.optim.SGD(likelihood_opt.parameters(), lr=15e-10)
-
+        opt = torch.optim.SGD(likelihood_opt.parameters(), lr=self.lr)
+        self.sample = None
         history = []
-        for _ in range(self.max_grad_dec):
+        for i in range(self.max_grad_dec):
             opt.zero_grad()
             out = likelihood_opt()
             out.backward()
             torch.nn.utils.clip_grad_norm_(likelihood_opt.parameters(), 10)
             opt.step()
             history.append(out.detach())
+            if i == 120:
+                self.sample = torch.pow(likelihood_opt.lambdas.detach(), 2)
             if self.show_plt:
                 print("error=" + str(history[-1]))
                 plt.plot(history)
                 plt.show()
                 clear_output(True)
 
-        return (likelihood_opt.lambdas.detach(), 0)
+        return (torch.pow(likelihood_opt.lambdas.detach(), 2), self.sample)
 
 class Optimizator(torch.nn.Module):
     def __init__(self, net_model:models.NetworkModel):
@@ -50,7 +54,10 @@ class Optimizator(torch.nn.Module):
 
     def forward(self):
         likelihood = 0
+        i = 0
+        hist_len = len(self.net_model.Y)
         for y in self.net_model.Y:
-            likelihood += torch.norm(y - self.A @ torch.pow(self.lambdas, 2))
+            i += 1
+            likelihood += 1000 * i / hist_len * torch.norm(y - self.A @ torch.pow(self.lambdas, 2))
 
         return likelihood

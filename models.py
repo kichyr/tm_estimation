@@ -13,18 +13,11 @@ class LinkWeight:
         self.j = j
         self.weight = weight
 
-# LinkWeghts contains "weight matrix"
-LinkWeights = list[LinkWeight]
-# LinkWeightsHistory contains history LinkWeghts in asc order
-LinkWeightsHistory = list[LinkWeights]
-
 class NetworkModel:
     """ Holds in it graph connectivity and history of links weight"""
     graph = torch.Tensor()
-    weights = list[torch.Tensor()]
     # matrix Y=AX
     A = torch.Tensor()
-    Y = list[torch.Tensor()]
     # 
     __graph = Graph()
 
@@ -35,10 +28,10 @@ class NetworkModel:
             graph.size(dim=0) ** 2, dtype=torch.float32)
         self.__calculate_A()
 
-    def set_link_load_raw(self, Y:list[torch.Tensor()]):
+    def set_link_load_raw(self, Y):
         self.Y = Y
 
-    def set_link_load(self, links_weights_hist:LinkWeightsHistory):
+    def set_link_load(self, links_weights_hist):
         self.weights = []
         self.Y = []
         for h, link_weights in enumerate(links_weights_hist):
