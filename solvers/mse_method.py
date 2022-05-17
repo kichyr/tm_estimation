@@ -20,41 +20,37 @@ class TMSolver_MSEMethod(solvers.solver.TMSolver):
         ):
         """based on ..."""
         likelihood_opt = Optimizator(net_model)
-        opt = torch.optim.Adam(likelihood_opt.parameters(), lr=15e-10)
+        opt = torch.optim.SGD(likelihood_opt.parameters(), lr=15e-10)
 
         history = []
         for _ in range(self.max_grad_dec):
             opt.zero_grad()
             out = likelihood_opt()
             out.backward()
-            for i in range(net_model.graph.size(dim=0)):
-                likelihood_opt.lambdas.grad[i * net_model.graph.size(dim=0) + i] = 0
+            torch.nn.utils.clip_grad_norm_(likelihood_opt.parameters(), 10)
             opt.step()
             history.append(out.detach())
             if self.show_plt:
+                print("error=" + str(history[-1]))
                 plt.plot(history)
                 plt.show()
                 clear_output(True)
 
-        return (likelihood_opt.lambdas.detach(), likelihood_opt.phi.detach())
+        return (likelihood_opt.lambdas.detach(), 0)
 
 class Optimizator(torch.nn.Module):
     def __init__(self, net_model:models.NetworkModel):
         torch.set_printoptions(profile="full")
         super().__init__()
         self.A = net_model.A
-        self.A = net_model.A + 0.1 * torch.eye(self.A.size(dim=0))
         # print(torch.det(self.A))
         self.net_model = net_model
         params_pattern = torch.ones(net_model.graph.size(dim=0)**2)
         self.lambdas = torch.nn.Parameter(params_pattern, requires_grad=True)
-        self.phi = torch.nn.Parameter(torch.tensor(1,dtype=torch.float64), requires_grad=True)
 
     def forward(self):
-        self.sigma = self.phi * torch.pow(torch.diag(self.lambdas), 2)
         likelihood = 0
         for y in self.net_model.Y:
-            likelihood -= 0.5 * (y - self.A @ self.lambdas).T @ torch.inverse(
-                self.A@self.sigma@self.A.T) @ (y-self.A@self.lambdas)
+            likelihood += torch.norm(y - self.A @ torch.pow(self.lambdas, 2))
 
-        return -likelihood
+        return likelihood

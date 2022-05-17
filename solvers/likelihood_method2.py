@@ -19,25 +19,9 @@ class TMSolver_LikelihoodMethod(solvers.solver.TMSolver):
         net_model:models.NetworkModel,
     ):
         """based on ..."""
-        likelihood_opt = Optimizator(net_model)
-        opt = torch.optim.Adam(likelihood_opt.parameters(), lr=15e-2)
-
-        history = []
-        for _ in range(self.max_grad_dec):
-            opt.zero_grad()
-            out = likelihood_opt()
-            out.backward()
-            for i in range(net_model.graph.size(dim=0)):
-                likelihood_opt.lambdas.grad[i * net_model.graph.size(dim=0) + i] = 0
-            opt.step()
-            print(out.detach())
-            history.append(out.detach())
-            if self.show_plt:
-                plt.plot(history)
-                plt.show()
-                clear_output(True)
-
-        return (likelihood_opt.lambdas, likelihood_opt.phi)
+        X, LU = torch.solve(net_model.Y[len(net_model.Y) - 1][..., None], net_model.A)
+        print(torch.dist(net_model.Y[len(net_model.Y) - 1][..., None], net_model.A@X))
+        return X, 0
 
 class Optimizator(torch.nn.Module):
     def __init__(self, net_model:models.NetworkModel):
