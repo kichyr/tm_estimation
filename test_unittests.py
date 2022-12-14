@@ -3,7 +3,7 @@ import models
 import solvers.likelihood_method as likelihood_method
 import numpy as np
 import benchmark_util
-
+import solvers.mse_method
 
 
 
@@ -36,3 +36,28 @@ def test_benchmark_load_default_tm_from_file():
 
     assert len(b.networkModel.Y) == 10
     assert len(b.networkModel.Y[0]) == 529
+
+
+def test_activate_netflow_in_model():
+    graph = torch.Tensor(torch.Tensor([
+        [0, 1, 1, 0],
+        [1, 0, 0, 1],
+        [1, 0, 0, 0],
+        [0, 1, 0, 0],
+    ]))
+    TM_hist = [
+        [
+            [0, 5, 10, 0],
+            [0, 0, 0, 5],
+            [0, 0, 0, 0],
+            [0, 0, 0, 0],
+        ],
+    ]
+    b = benchmark_util.BenchmarkUtil(graph=graph, TM_hist=TM_hist)
+    w = [0] * 16
+    w[1] = 1
+    b.activate_netflow_in_model(w)
+
+    mse_solver = solvers.mse_method.TMSolver_MSEMethod(max_grad_dec = 50, show_plt=True)
+    b.show_benchmark_for_last_TM(mse_solver)
+    # assert torch.eq(b.networkModel.Y[0], torch.Tensor([0., 1., 1., 0.])).all()

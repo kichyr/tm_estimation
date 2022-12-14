@@ -71,3 +71,11 @@ class NetworkModel:
     def __pair_to_OD_number(self, i:int, j:int) -> int:
         return j + i*self.graph.size(dim=1)
 
+    def add_netflow_equations(
+        self,
+        A_netflow:torch.Tensor,
+        Y_netflow_hist:list,
+    ) -> None:
+       self.A = torch.cat([self.A, A_netflow], axis=0)
+       for i, Y in enumerate(self.Y):
+            self.Y[i] = torch.cat([Y, Y_netflow_hist[i]], axis=0)

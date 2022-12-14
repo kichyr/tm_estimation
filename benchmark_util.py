@@ -56,6 +56,29 @@ class BenchmarkUtil:
 
                 self.TM_hist.append(convert_raw_tm_2d_matrix(raw_TM=rawTM, n=self.networkModel.graph.size(dim=0)))
 
+    def activate_netflow_in_model(self, w:list):
+        A_netflow, Y_hist = self.__generate_netflow_equations(w)
+        self.networkModel.add_netflow_equations(
+            A_netflow, Y_hist,
+        )
+
+    def __generate_netflow_equations(self, w:list):
+        A_netflow = torch.empty(0,self.networkModel.A.size(dim=1))
+        for i, row in enumerate(self.networkModel.A):
+            if(w[i] == 0):
+                continue
+            for j, el in enumerate(row):
+                if(el != 0):
+                    new_eq = torch.zeros(
+                    len(row), dtype=torch.float32)
+                    new_eq[j] = 1
+                    A_netflow = torch.cat([A_netflow, torch.Tensor([new_eq.tolist()])], axis=0)
+
+        Y_hist = []
+        for tm in self.raw_TM_hist:
+            Y_hist.append(A_netflow @ tm)
+
+        return A_netflow, Y_hist
 
     ### benchmarks graphs
     def show_benchmark_for_last_TM(
