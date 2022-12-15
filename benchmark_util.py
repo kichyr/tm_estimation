@@ -96,6 +96,8 @@ class BenchmarkUtil:
             loss_historyX.append(lossX)
             loss_historyY.append(lossY)
 
+        print("loss_historyX", loss_historyX)
+        print("loss_historyY", loss_historyY)
 
         plt.figure(figsize=(12,12))
         plt.plot(loss_historyX, label="X error")
