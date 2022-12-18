@@ -57,12 +57,17 @@ class NetworkModel:
                     self.A[self.__pair_to_OD_number(
                         i,j)][self.__pair_to_OD_number(
                         i,j)] = 1
-                path = find_path(self.__graph, i, j)
-                for node_index in range(len(path.nodes) - 1):
-                    # set that (i,j) OD pair have best path trought  path[node_index],path[node_index+1] edge
-                    self.A[self.__pair_to_OD_number(
-                            path.nodes[node_index],path.nodes[node_index+1])][self.__pair_to_OD_number(
-                        i,j)] = 1
+                try: 
+                    path = find_path(self.__graph, i, j)
+                except:
+                    path = []
+                    print("Cannot find path")
+                if (path != []):
+                    for node_index in range(len(path.nodes) - 1):
+                        # set that (i,j) OD pair have best path trought  path[node_index],path[node_index+1] edge
+                        self.A[self.__pair_to_OD_number(
+                                path.nodes[node_index],path.nodes[node_index+1])][self.__pair_to_OD_number(
+                            i,j)] = 1
 
     def calculate_Y(self):
         for w_index in range(len(self.weights)):

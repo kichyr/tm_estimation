@@ -65,24 +65,35 @@ def test_activate_netflow_in_model():
     # assert torch.eq(b.networkModel.Y[0], torch.Tensor([0., 1., 1., 0.])).all()
 
 def test_netflow_model():
+    # graph = torch.Tensor(torch.Tensor([
+    #     [0, 1, 0, 0, 0],
+    #     [1, 0, 1, 0, 0],
+    #     [0, 1, 0, 1, 1],
+    #     [0, 0, 1, 0, 0],
+    #     [0, 0, 1, 0, 0],
+    # ]))
+
     graph = torch.Tensor(torch.Tensor([
         [0, 1, 0, 0, 0],
-        [1, 0, 1, 0, 0],
-        [0, 1, 0, 1, 1],
         [0, 0, 1, 0, 0],
-        [0, 0, 1, 0, 0],
+        [0, 0, 0, 1, 1],
+        [0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0],
     ]))
 
     # graph = torch.Tensor(torch.Tensor([
-    #     [0, 1],
-    #     [1, 0],
+    #     [0, 1, 0],
+    #     [0, 0, 1],
+    #     [0, 0, 0],
     # ]))
 
     print("Generating model....")
     model = netflow_problem_model.NetflowProblemModel(graph)
+    print(model.A)
+    
     print("Ok!")
 
     print("Calculating Optimal Solution...")
-    res = model.find_optimal_solution(3, 0.1)
+    res = model.find_optimal_solution(2, 0.1)
 
     print(res)
