@@ -60,4 +60,6 @@ class Optimizator(torch.nn.Module):
             i += 1
             likelihood += 1000 * i / hist_len * torch.norm(y - self.A @ torch.pow(self.lambdas, 2))
 
+        likelihood += torch.linalg.norm(self.lambdas, dim=0)
+
         return likelihood

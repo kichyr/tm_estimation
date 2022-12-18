@@ -1,5 +1,7 @@
 import torch
 from dijkstar import Graph, find_path
+import utils
+import sympy
 
 # TM represents traffic matrix type
 TM = torch.Tensor
@@ -59,8 +61,8 @@ class NetworkModel:
                 for node_index in range(len(path.nodes) - 1):
                     # set that (i,j) OD pair have best path trought  path[node_index],path[node_index+1] edge
                     self.A[self.__pair_to_OD_number(
-                        i,j)][self.__pair_to_OD_number(
-                            path.nodes[node_index],path.nodes[node_index+1])] = 1
+                            path.nodes[node_index],path.nodes[node_index+1])][self.__pair_to_OD_number(
+                        i,j)] = 1
 
     def calculate_Y(self):
         for w_index in range(len(self.weights)):
@@ -69,7 +71,7 @@ class NetworkModel:
                     self.Y[w_index][self.__pair_to_OD_number(i,j)] = self.weights[w_index][i][j]
     
     def __pair_to_OD_number(self, i:int, j:int) -> int:
-        return j + i*self.graph.size(dim=1)
+        return j + i*self.graph.size(dim=0)
 
     def add_netflow_equations(
         self,
@@ -79,3 +81,10 @@ class NetworkModel:
        self.A = torch.cat([self.A, A_netflow], axis=0)
        for i, Y in enumerate(self.Y):
             self.Y[i] = torch.cat([Y, Y_netflow_hist[i]], axis=0)
+
+    def __str__(self):
+        print("Y=")
+        sympy.pprint(utils.matrixform(self.Y))
+        print("A=")
+        sympy.pprint(utils.matrixform(self.A))
+        return ""
