@@ -5,6 +5,8 @@ import numpy as np
 import benchmark_util
 import solvers.mse_method
 
+import netflow_problem_model
+
 
 
 
@@ -61,3 +63,26 @@ def test_activate_netflow_in_model():
     mse_solver = solvers.mse_method.TMSolver_MSEMethod(max_grad_dec = 50, show_plt=True)
     b.show_benchmark_for_last_TM(mse_solver)
     # assert torch.eq(b.networkModel.Y[0], torch.Tensor([0., 1., 1., 0.])).all()
+
+def test_netflow_model():
+    graph = torch.Tensor(torch.Tensor([
+        [0, 1, 0, 0, 0],
+        [1, 0, 1, 0, 0],
+        [0, 1, 0, 1, 1],
+        [0, 0, 1, 0, 0],
+        [0, 0, 1, 0, 0],
+    ]))
+
+    # graph = torch.Tensor(torch.Tensor([
+    #     [0, 1],
+    #     [1, 0],
+    # ]))
+
+    print("Generating model....")
+    model = netflow_problem_model.NetflowProblemModel(graph)
+    print("Ok!")
+
+    print("Calculating Optimal Solution...")
+    res = model.find_optimal_solution(3, 0.1)
+
+    print(res)
