@@ -36,6 +36,7 @@ class BenchmarkUtil:
         self.graph = test_graph
         self.networkModel = models.NetworkModel(graph=self.graph)
         self.TM_hist = []
+        self.raw_TM_hist = []
         links_weights_hist = deque(maxlen=history_size)
 
         with open('data/geant-flat-tms.csv.1', newline='') as csvfile:
@@ -48,13 +49,16 @@ class BenchmarkUtil:
                 for j in range(self.networkModel.graph.size(dim=0)):
                     rawTM[j * self.networkModel.graph.size(dim=0) + j] = 0
                 links_weights_hist.append(rawTM)
-                if i < history_size  or i < started_sample_index:
+                if i < started_sample_index:
                     continue
+                if i > history_size:
+                    break
                     
                 Ys, _ = convert_to_link_weights(self.networkModel.A, links_weights_hist)
                 self.networkModel.set_link_load_raw(Ys)
 
                 self.TM_hist.append(convert_raw_tm_2d_matrix(raw_TM=rawTM, n=self.networkModel.graph.size(dim=0)))
+                self.raw_TM_hist.append(convert_2d_matrix_to_raw_tm(self.TM_hist[-1]))
 
     def activate_netflow_in_model(self, w:list):
         A_netflow, Y_hist = self.__generate_netflow_equations(w)
@@ -84,28 +88,36 @@ class BenchmarkUtil:
     def show_benchmark_for_last_TM(
         self,
         solver:solvers.solver.TMSolver,
+        test_cases_size = 1,
+        history_size = 10,
+        started_sample_index = 0,
         debug=False,
     ):
 
         loss_historyX = []
         loss_historyY = []
 
+        i = 0
         for rawTM in self.raw_TM_hist:
+            if i < started_sample_index:
+                continue
             predTM, sample = solver.get_optimal_solution(self.networkModel)
             (lossX, lossY) = loss(self.networkModel.A, predTM, torch.Tensor(rawTM), sample=sample, debug=debug)
             loss_historyX.append(lossX)
             loss_historyY.append(lossY)
+            if i - history_size + 1 == started_sample_index + test_cases_size:
+                return
 
         print("loss_historyX", loss_historyX)
         print("loss_historyY", loss_historyY)
 
-        plt.figure(figsize=(12,12))
+        """ plt.figure(figsize=(12,12))
         plt.plot(loss_historyX, label="X error")
         plt.plot(loss_historyY, label="Y error")
         plt.xlabel("experiment number")
         plt.ylabel("relative loss")
         plt.legend()
-        plt.show()
+        plt.show() """
 
 
 

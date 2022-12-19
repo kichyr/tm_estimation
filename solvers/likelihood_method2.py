@@ -51,7 +51,7 @@ class Optimizator(torch.nn.Module):
         for i in range(net_model.graph.size(dim=0)):
             params_pattern[i * net_model.graph.size(dim=0) + i] = 0.0001
         self.lambdas = torch.nn.Parameter(params_pattern, requires_grad=True)
-        self.phi = torch.nn.Parameter(torch.tensor(1,dtype=torch.float64), requires_grad=True)
+        self.phi = torch.nn.Parameter(torch.tensor(1,dtype=torch.float), requires_grad=True)
 
     def forward(self):
         self.sigma = self.phi * torch.pow(torch.diag(self.lambdas), 2)

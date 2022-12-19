@@ -10,7 +10,7 @@ class TMSolver_MSEMethod(solvers.solver.TMSolver):
         self,
         max_grad_dec:int = 200,
         show_plt:bool = False,
-        lr:float = 15e-1
+        lr:float = 15e-3
     ):
         self.max_grad_dec = max_grad_dec
         self.show_plt = show_plt
@@ -26,6 +26,7 @@ class TMSolver_MSEMethod(solvers.solver.TMSolver):
         self.sample = None
         history = []
         for i in range(self.max_grad_dec):
+            clear_output(True)
             opt.zero_grad()
             out = likelihood_opt()
             out.backward()
@@ -38,7 +39,6 @@ class TMSolver_MSEMethod(solvers.solver.TMSolver):
                 print("error=" + str(history[-1]))
                 plt.plot(history)
                 plt.show()
-                clear_output(True)
 
         return (torch.pow(likelihood_opt.lambdas.detach(), 2), self.sample)
 

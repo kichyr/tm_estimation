@@ -53,7 +53,7 @@ class Optimizator(torch.nn.Module):
 
     def forward(self):
         self.sigma = self.phi * torch.pow(torch.diag(self.lambdas), 2)
-        likelihood = - len(self.net_model.Y) / 2.0 * torch.log(torch.det(self.A@self.sigma@self.A.T))
+        likelihood = float(- len(self.net_model.Y) / 2.0 * torch.log(torch.det(self.A@self.sigma@self.A.T)))
         for y in self.net_model.Y:
             likelihood -= 0.5 * (y - self.A @ self.lambdas).T @ torch.inverse(
                 self.A@self.sigma@self.A.T) @ (y-self.A@self.lambdas)
